@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="openstack,API," />
+  <meta name="keywords" content="API,openstack," />
 
 
 
@@ -80,14 +80,14 @@
 
 
 <meta name="description" content="早期OpenStack项目API的实现方式早期的OpenStack项目采用的是Paste + PasteDeploy + Routes + WebOb的实现方式，如Nova、Keystone、Neutron、Cinder等。这几个模块分别负责应用的WSGI化、URL路由和请求处理。选择这样组合的好处的具有灵活性，缺点则是要把这几个项目组合起来，实现一个REST服务需要大量的代码。 新项目选用的AP">
-<meta name="keywords" content="openstack,API">
+<meta name="keywords" content="API,openstack">
 <meta property="og:type" content="article">
 <meta property="og:title" content="OpenStack项目REST API的另一种实现方式--基于pecan">
 <meta property="og:url" content="https://chaoleili.github.io/blog/2017/11/22/openstack项目另一类api的实现-基于pecan/index.html">
 <meta property="og:site_name" content="Blog">
 <meta property="og:description" content="早期OpenStack项目API的实现方式早期的OpenStack项目采用的是Paste + PasteDeploy + Routes + WebOb的实现方式，如Nova、Keystone、Neutron、Cinder等。这几个模块分别负责应用的WSGI化、URL路由和请求处理。选择这样组合的好处的具有灵活性，缺点则是要把这几个项目组合起来，实现一个REST服务需要大量的代码。 新项目选用的AP">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2017-12-01T07:49:14.329Z">
+<meta property="og:updated_time" content="2017-12-01T08:25:46.644Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="OpenStack项目REST API的另一种实现方式--基于pecan">
 <meta name="twitter:description" content="早期OpenStack项目API的实现方式早期的OpenStack项目采用的是Paste + PasteDeploy + Routes + WebOb的实现方式，如Nova、Keystone、Neutron、Cinder等。这几个模块分别负责应用的WSGI化、URL路由和请求处理。选择这样组合的好处的具有灵活性，缺点则是要把这几个项目组合起来，实现一个REST服务需要大量的代码。 新项目选用的AP">
@@ -298,7 +298,7 @@
               
                 <span class="post-meta-item-text">更新于&#58;</span>
               
-              <time title="更新于" itemprop="dateModified" datetime="2017-12-01T15:49:14+08:00">
+              <time title="更新于" itemprop="dateModified" datetime="2017-12-01T16:25:46+08:00">
                 2017-12-01
               </time>
             
@@ -357,88 +357,27 @@
         <h2 id="早期OpenStack项目API的实现方式"><a href="#早期OpenStack项目API的实现方式" class="headerlink" title="早期OpenStack项目API的实现方式"></a>早期OpenStack项目API的实现方式</h2><p>早期的OpenStack项目采用的是Paste + PasteDeploy + Routes + WebOb的实现方式，如Nova、Keystone、Neutron、Cinder等。这几个模块分别负责应用的WSGI化、URL路由和请求处理。选择这样组合的好处的具有灵活性，缺点则是要把这几个项目组合起来，实现一个REST服务需要大量的代码。</p>
 <h2 id="新项目选用的API框架"><a href="#新项目选用的API框架" class="headerlink" title="新项目选用的API框架"></a>新项目选用的API框架</h2><p>后续产生的OpenStack项目则舍弃了早期的API实现方式，而是改用了pecan这样的一个web框架。Pecan是一个基于对象路由的框架，轻便灵活，使用简单，代码量相比于早期的实现方式也大幅减小。Pecan并不倾向于解决web的所有问题（比如Django），它主要是解决对象路由和REST的支持。因此十分符合OpenStack API项目的需求。</p>
 <h3 id="Pecan的应用（以zun项目为例）"><a href="#Pecan的应用（以zun项目为例）" class="headerlink" title="Pecan的应用（以zun项目为例）"></a>Pecan的应用（以zun项目为例）</h3><ol>
-<li>配置</li>
+<li><p>配置</p>
+<p> pecan的配置很简单，一般位于zun/api/config.py</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">app = &#123;</span><br><span class="line">    <span class="string">'root'</span>: <span class="string">'zun.api.controllers.root.RootController'</span>,</span><br><span class="line">    <span class="string">'modules'</span>: [<span class="string">'zun'</span>],</span><br><span class="line">    <span class="string">'hooks'</span>: [</span><br><span class="line">        hooks.ContextHook(),</span><br><span class="line">        hooks.NoExceptionTracebackHook(),</span><br><span class="line">        hooks.RPCHook(),</span><br><span class="line">    ],</span><br><span class="line">    <span class="string">'debug'</span>: <span class="keyword">False</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>controller</p>
+<p> 根据上述配置，root指明项目的root controller，也就是url请求的/，zun root controller的实现</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RootController</span><span class="params">(rest.RestController)</span>:</span></span><br><span class="line"></span><br><span class="line">    v1 = v1.Controller()</span><br><span class="line">    experimental = experimental.Controller()</span><br></pre></td></tr></table></figure>
+<p> 表示存在以下两个url /v1 和 /experimental，同理查看v1.Controller的实现</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Controller</span><span class="params">(controllers_base.Controller)</span>:</span></span><br><span class="line">    <span class="string">"""Version 1 API controller root."""</span></span><br><span class="line">    services = zun_services.ZunServiceController()</span><br><span class="line">    containers = container_controller.ContainersController()</span><br><span class="line">    images = image_controller.ImagesController()</span><br><span class="line">    hosts = host_controller.HostController()</span><br><span class="line">    capsules = capsule_controller.CapsuleController()</span><br></pre></td></tr></table></figure>
+<p> 表示的url为/v1/services /v1/containers /v1/images /v1/hosts 和 /v1/capsules</p>
+</li>
+<li><p>REST的实现</p>
+<p> 在查看container中REST具体实现之前，先看一下Pecan支持的默认REST URL</p>
+<p> Methon | Description | URL(s)<br> —— | ———– | —–<br> get_one | 获取单个资源 | GET /XXX/1<br> get_all | 获取全部资源 | GET /XXX/<br> get | 获取一个或多个资源 | GET /XXX/1 or GET /XXX/<br> new | 显示一个创建新资源的界面 | GET /xxx/new<br> edit | 显示一个编辑现有资源的界面 | GET /xxx/1/edit<br> post | 创建一个资源 | POST /xxx/<br> put | 更新一个资源 | POST /xxx/1?_method=put or PUT /xxx/1<br> get_delete | 显示一个删除确认页面 | GET /xxx/1/delete<br> delete | 删除一个存在的资源 | POST /xxx/1?_method=delete or DELETE /xxx/1<br> patch | 更新一个现有资源 | PATCH /xxx/1</p>
+<p> 详情可以查看pecan的官方文档：<a href="https://pecan.readthedocs.io/en/latest/rest.html" target="_blank" rel="external">https://pecan.readthedocs.io/en/latest/rest.html</a></p>
+<p> NOTE：patch这个方法在官方文档中没有标明，但是相关代码中已经有实现。pecan.rest:RestController</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">method_iter</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">for</span> func <span class="keyword">in</span> (<span class="string">'get'</span>, <span class="string">'get_one'</span>, <span class="string">'get_all'</span>, <span class="string">'new'</span>, <span class="string">'edit'</span>,</span><br><span class="line">                 <span class="string">'get_delete'</span>):</span><br><span class="line">        <span class="keyword">if</span> self._find_controller(func):</span><br><span class="line">            <span class="keyword">yield</span> <span class="string">'GET'</span></span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">for</span> method <span class="keyword">in</span> (<span class="string">'HEAD'</span>, <span class="string">'POST'</span>, <span class="string">'PUT'</span>, <span class="string">'DELETE'</span>, <span class="string">'TRACE'</span>,</span><br><span class="line">                   <span class="string">'PATCH'</span>):</span><br><span class="line">        func = method.lower()</span><br><span class="line">        <span class="keyword">if</span> self._find_controller(func):</span><br><span class="line">            <span class="keyword">yield</span> method</span><br></pre></td></tr></table></figure>
+<p> 当GET POST PUT PATCH DELETE等方法不能满足需要时，可以在相应controller内部定义_custom_actions变量，改变量是一个dict，key为方法名称的字符串，value是支持的method的list。以ContainersController为例：</p>
+ <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ContainersController</span><span class="params">(base.Controller)</span>:</span></span><br><span class="line">    _custom_actions = &#123;</span><br><span class="line">        <span class="string">'start'</span>: [<span class="string">'POST'</span>],</span><br><span class="line">        <span class="string">'stats'</span>: [<span class="string">'GET'</span>],</span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">start</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+</li>
 </ol>
-<p>pecan的配置很简单，一般位于zun/api/config.py</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">app = &#123;</span><br><span class="line">    <span class="string">'root'</span>: <span class="string">'zun.api.controllers.root.RootController'</span>,</span><br><span class="line">    <span class="string">'modules'</span>: [<span class="string">'zun'</span>],</span><br><span class="line">    <span class="string">'hooks'</span>: [</span><br><span class="line">        hooks.ContextHook(),</span><br><span class="line">        hooks.NoExceptionTracebackHook(),</span><br><span class="line">        hooks.RPCHook(),</span><br><span class="line">    ],</span><br><span class="line">    <span class="string">'debug'</span>: <span class="keyword">False</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ol>
-<li>controller</li>
-</ol>
-<p>根据上述配置，root指明项目的root controller，也就是url请求的/，zun root controller的实现</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RootController</span><span class="params">(rest.RestController)</span>:</span></span><br><span class="line"></span><br><span class="line">    v1 = v1.Controller()</span><br><span class="line">    experimental = experimental.Controller()</span><br></pre></td></tr></table></figure>
-<p>表示存在以下两个url /v1 和 /experimental，同理查看v1.Controller的实现</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Controller</span><span class="params">(controllers_base.Controller)</span>:</span></span><br><span class="line">    <span class="string">"""Version 1 API controller root."""</span></span><br><span class="line">    services = zun_services.ZunServiceController()</span><br><span class="line">    containers = container_controller.ContainersController()</span><br><span class="line">    images = image_controller.ImagesController()</span><br><span class="line">    hosts = host_controller.HostController()</span><br><span class="line">    capsules = capsule_controller.CapsuleController()</span><br></pre></td></tr></table></figure>
-<p>表示的url为/v1/services /v1/containers /v1/images /v1/hosts 和 /v1/capsules</p>
-<ol>
-<li>REST的实现</li>
-</ol>
-<p>在查看container中REST具体实现之前，先看一下Pecan支持的默认REST URL</p>
-<table>
-<thead>
-<tr>
-<th>Methon</th>
-<th>Description</th>
-<th>URL(s)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>get_one</td>
-<td>获取单个资源</td>
-<td>GET /XXX/1 </td>
-</tr>
-<tr>
-<td>get_all</td>
-<td>获取全部资源</td>
-<td>GET /XXX/</td>
-</tr>
-<tr>
-<td>get</td>
-<td>获取一个或多个资源</td>
-<td>GET /XXX/1 or GET /XXX/</td>
-</tr>
-<tr>
-<td>new</td>
-<td>显示一个创建新资源的界面</td>
-<td>GET /xxx/new</td>
-</tr>
-<tr>
-<td>edit</td>
-<td>显示一个编辑现有资源的界面</td>
-<td>GET /xxx/1/edit</td>
-</tr>
-<tr>
-<td>post</td>
-<td>创建一个资源</td>
-<td>POST /xxx/</td>
-</tr>
-<tr>
-<td>put</td>
-<td>更新一个资源</td>
-<td>POST /xxx/1?_method=put or PUT /xxx/1</td>
-</tr>
-<tr>
-<td>get_delete</td>
-<td>显示一个删除确认页面</td>
-<td>GET /xxx/1/delete</td>
-</tr>
-<tr>
-<td>delete</td>
-<td>删除一个存在的资源</td>
-<td>POST /xxx/1?_method=delete or DELETE /xxx/1</td>
-</tr>
-<tr>
-<td>patch</td>
-<td>更新一个现有资源</td>
-<td>PATCH /xxx/1</td>
-</tr>
-</tbody>
-</table>
-<p>详情可以查看pecan的官方文档：<a href="https://pecan.readthedocs.io/en/latest/rest.html" target="_blank" rel="external">https://pecan.readthedocs.io/en/latest/rest.html</a></p>
-<p>NOTE：patch这个方法在官方文档中没有标明，但是相关代码中已经有实现。pecan.rest:RestController</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">method_iter</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">for</span> func <span class="keyword">in</span> (<span class="string">'get'</span>, <span class="string">'get_one'</span>, <span class="string">'get_all'</span>, <span class="string">'new'</span>, <span class="string">'edit'</span>,</span><br><span class="line">                 <span class="string">'get_delete'</span>):</span><br><span class="line">        <span class="keyword">if</span> self._find_controller(func):</span><br><span class="line">            <span class="keyword">yield</span> <span class="string">'GET'</span></span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">for</span> method <span class="keyword">in</span> (<span class="string">'HEAD'</span>, <span class="string">'POST'</span>, <span class="string">'PUT'</span>, <span class="string">'DELETE'</span>, <span class="string">'TRACE'</span>,</span><br><span class="line">                   <span class="string">'PATCH'</span>):</span><br><span class="line">        func = method.lower()</span><br><span class="line">        <span class="keyword">if</span> self._find_controller(func):</span><br><span class="line">            <span class="keyword">yield</span> method</span><br></pre></td></tr></table></figure>
-<p>当GET POST PUT PATCH DELETE等方法不能满足需要时，可以在相应controller内部定义_custom_actions变量，改变量是一个dict，key为方法名称的字符串，value是支持的method的list。以ContainersController为例：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ContainersController</span><span class="params">(base.Controller)</span>:</span></span><br><span class="line">    _custom_actions = &#123;</span><br><span class="line">        <span class="string">'start'</span>: [<span class="string">'POST'</span>],</span><br><span class="line">        <span class="string">'stats'</span>: [<span class="string">'GET'</span>],</span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">start</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
 <p>以上便是添加一个pecan项目的REST API所需要涉及到的代码。OpenStack项目中还存在API version和policy控制，具体的可以查阅相关代码。</p>
 
       
@@ -457,9 +396,9 @@
       
         <div class="post-tags">
           
-            <a href="/blog/tags/openstack/" rel="tag"># openstack</a>
-          
             <a href="/blog/tags/API/" rel="tag"># API</a>
+          
+            <a href="/blog/tags/openstack/" rel="tag"># openstack</a>
           
         </div>
       
