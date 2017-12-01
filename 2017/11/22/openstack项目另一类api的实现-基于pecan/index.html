@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/blog/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/blog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/blog/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/blog/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="openstack,API," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="早期OpenStack项目API的实现方式早期的OpenStack项目采用的是Paste + PasteDeploy + Routes + WebOb的实现方式，如Nova、Keystone、Neutron、Cinder等。这几个模块分别负责应用的WSGI化、URL路由和请求处理。选择这样组合的好处的具有灵活性，缺点则是要把这几个项目组合起来，实现一个REST服务需要大量的代码。 新项目选用的AP">
+<meta name="keywords" content="openstack,API">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack项目REST API的另一种实现方式--基于pecan">
+<meta property="og:url" content="https://chaoleili.github.io/blog/2017/11/22/openstack项目另一类api的实现-基于pecan/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="早期OpenStack项目API的实现方式早期的OpenStack项目采用的是Paste + PasteDeploy + Routes + WebOb的实现方式，如Nova、Keystone、Neutron、Cinder等。这几个模块分别负责应用的WSGI化、URL路由和请求处理。选择这样组合的好处的具有灵活性，缺点则是要把这几个项目组合起来，实现一个REST服务需要大量的代码。 新项目选用的AP">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2017-12-01T07:49:14.329Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OpenStack项目REST API的另一种实现方式--基于pecan">
+<meta name="twitter:description" content="早期OpenStack项目API的实现方式早期的OpenStack项目采用的是Paste + PasteDeploy + Routes + WebOb的实现方式，如Nova、Keystone、Neutron、Cinder等。这几个模块分别负责应用的WSGI化、URL路由和请求处理。选择这样组合的好处的具有灵活性，缺点则是要把这几个项目组合起来，实现一个REST服务需要大量的代码。 新项目选用的AP">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/blog/',
+    scheme: 'Pisces',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://chaoleili.github.io/blog/2017/11/22/openstack项目另一类api的实现-基于pecan/"/>
+
+
+
+
+
+  <title>OpenStack项目REST API的另一种实现方式--基于pecan | Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/blog/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/blog/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/blog/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/blog/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/blog/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaoleili.github.io/blog/blog/2017/11/22/openstack项目另一类api的实现-基于pecan/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="新参者">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://ozgcfzmy3.bkt.clouddn.com/Jietu20170606-204545.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">OpenStack项目REST API的另一种实现方式--基于pecan</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-22T15:37:44+08:00">
+                2017-11-22
+              </time>
+            
+
+            
+              <span class="post-meta-divider">|</span>
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-check-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">更新于&#58;</span>
+              
+              <time title="更新于" itemprop="dateModified" datetime="2017-12-01T15:49:14+08:00">
+                2017-12-01
+              </time>
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/openstack/" itemprop="url" rel="index">
+                    <span itemprop="name">openstack</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="早期OpenStack项目API的实现方式"><a href="#早期OpenStack项目API的实现方式" class="headerlink" title="早期OpenStack项目API的实现方式"></a>早期OpenStack项目API的实现方式</h2><p>早期的OpenStack项目采用的是Paste + PasteDeploy + Routes + WebOb的实现方式，如Nova、Keystone、Neutron、Cinder等。这几个模块分别负责应用的WSGI化、URL路由和请求处理。选择这样组合的好处的具有灵活性，缺点则是要把这几个项目组合起来，实现一个REST服务需要大量的代码。</p>
+<h2 id="新项目选用的API框架"><a href="#新项目选用的API框架" class="headerlink" title="新项目选用的API框架"></a>新项目选用的API框架</h2><p>后续产生的OpenStack项目则舍弃了早期的API实现方式，而是改用了pecan这样的一个web框架。Pecan是一个基于对象路由的框架，轻便灵活，使用简单，代码量相比于早期的实现方式也大幅减小。Pecan并不倾向于解决web的所有问题（比如Django），它主要是解决对象路由和REST的支持。因此十分符合OpenStack API项目的需求。</p>
+<h3 id="Pecan的应用（以zun项目为例）"><a href="#Pecan的应用（以zun项目为例）" class="headerlink" title="Pecan的应用（以zun项目为例）"></a>Pecan的应用（以zun项目为例）</h3><ol>
+<li>配置</li>
+</ol>
+<p>pecan的配置很简单，一般位于zun/api/config.py</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">app = &#123;</span><br><span class="line">    <span class="string">'root'</span>: <span class="string">'zun.api.controllers.root.RootController'</span>,</span><br><span class="line">    <span class="string">'modules'</span>: [<span class="string">'zun'</span>],</span><br><span class="line">    <span class="string">'hooks'</span>: [</span><br><span class="line">        hooks.ContextHook(),</span><br><span class="line">        hooks.NoExceptionTracebackHook(),</span><br><span class="line">        hooks.RPCHook(),</span><br><span class="line">    ],</span><br><span class="line">    <span class="string">'debug'</span>: <span class="keyword">False</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>controller</li>
+</ol>
+<p>根据上述配置，root指明项目的root controller，也就是url请求的/，zun root controller的实现</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RootController</span><span class="params">(rest.RestController)</span>:</span></span><br><span class="line"></span><br><span class="line">    v1 = v1.Controller()</span><br><span class="line">    experimental = experimental.Controller()</span><br></pre></td></tr></table></figure>
+<p>表示存在以下两个url /v1 和 /experimental，同理查看v1.Controller的实现</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Controller</span><span class="params">(controllers_base.Controller)</span>:</span></span><br><span class="line">    <span class="string">"""Version 1 API controller root."""</span></span><br><span class="line">    services = zun_services.ZunServiceController()</span><br><span class="line">    containers = container_controller.ContainersController()</span><br><span class="line">    images = image_controller.ImagesController()</span><br><span class="line">    hosts = host_controller.HostController()</span><br><span class="line">    capsules = capsule_controller.CapsuleController()</span><br></pre></td></tr></table></figure>
+<p>表示的url为/v1/services /v1/containers /v1/images /v1/hosts 和 /v1/capsules</p>
+<ol>
+<li>REST的实现</li>
+</ol>
+<p>在查看container中REST具体实现之前，先看一下Pecan支持的默认REST URL</p>
+<table>
+<thead>
+<tr>
+<th>Methon</th>
+<th>Description</th>
+<th>URL(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>get_one</td>
+<td>获取单个资源</td>
+<td>GET /XXX/1 </td>
+</tr>
+<tr>
+<td>get_all</td>
+<td>获取全部资源</td>
+<td>GET /XXX/</td>
+</tr>
+<tr>
+<td>get</td>
+<td>获取一个或多个资源</td>
+<td>GET /XXX/1 or GET /XXX/</td>
+</tr>
+<tr>
+<td>new</td>
+<td>显示一个创建新资源的界面</td>
+<td>GET /xxx/new</td>
+</tr>
+<tr>
+<td>edit</td>
+<td>显示一个编辑现有资源的界面</td>
+<td>GET /xxx/1/edit</td>
+</tr>
+<tr>
+<td>post</td>
+<td>创建一个资源</td>
+<td>POST /xxx/</td>
+</tr>
+<tr>
+<td>put</td>
+<td>更新一个资源</td>
+<td>POST /xxx/1?_method=put or PUT /xxx/1</td>
+</tr>
+<tr>
+<td>get_delete</td>
+<td>显示一个删除确认页面</td>
+<td>GET /xxx/1/delete</td>
+</tr>
+<tr>
+<td>delete</td>
+<td>删除一个存在的资源</td>
+<td>POST /xxx/1?_method=delete or DELETE /xxx/1</td>
+</tr>
+<tr>
+<td>patch</td>
+<td>更新一个现有资源</td>
+<td>PATCH /xxx/1</td>
+</tr>
+</tbody>
+</table>
+<p>详情可以查看pecan的官方文档：<a href="https://pecan.readthedocs.io/en/latest/rest.html" target="_blank" rel="external">https://pecan.readthedocs.io/en/latest/rest.html</a></p>
+<p>NOTE：patch这个方法在官方文档中没有标明，但是相关代码中已经有实现。pecan.rest:RestController</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">method_iter</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">for</span> func <span class="keyword">in</span> (<span class="string">'get'</span>, <span class="string">'get_one'</span>, <span class="string">'get_all'</span>, <span class="string">'new'</span>, <span class="string">'edit'</span>,</span><br><span class="line">                 <span class="string">'get_delete'</span>):</span><br><span class="line">        <span class="keyword">if</span> self._find_controller(func):</span><br><span class="line">            <span class="keyword">yield</span> <span class="string">'GET'</span></span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">for</span> method <span class="keyword">in</span> (<span class="string">'HEAD'</span>, <span class="string">'POST'</span>, <span class="string">'PUT'</span>, <span class="string">'DELETE'</span>, <span class="string">'TRACE'</span>,</span><br><span class="line">                   <span class="string">'PATCH'</span>):</span><br><span class="line">        func = method.lower()</span><br><span class="line">        <span class="keyword">if</span> self._find_controller(func):</span><br><span class="line">            <span class="keyword">yield</span> method</span><br></pre></td></tr></table></figure>
+<p>当GET POST PUT PATCH DELETE等方法不能满足需要时，可以在相应controller内部定义_custom_actions变量，改变量是一个dict，key为方法名称的字符串，value是支持的method的list。以ContainersController为例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ContainersController</span><span class="params">(base.Controller)</span>:</span></span><br><span class="line">    _custom_actions = &#123;</span><br><span class="line">        <span class="string">'start'</span>: [<span class="string">'POST'</span>],</span><br><span class="line">        <span class="string">'stats'</span>: [<span class="string">'GET'</span>],</span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">start</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+<p>以上便是添加一个pecan项目的REST API所需要涉及到的代码。OpenStack项目中还存在API version和policy控制，具体的可以查阅相关代码。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog/tags/openstack/" rel="tag"># openstack</a>
+          
+            <a href="/blog/tags/API/" rel="tag"># API</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/blog/2017/11/15/nova-api/" rel="next" title="Nova API分析">
+                <i class="fa fa-chevron-left"></i> Nova API分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="http://ozgcfzmy3.bkt.clouddn.com/Jietu20170606-204545.jpg"
+                alt="新参者" />
+            
+              <p class="site-author-name" itemprop="name">新参者</p>
+              <p class="site-description motion-element" itemprop="description">Get busy living, or get busy dying</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/blog/archives/">
+              
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/blog/categories/index.html">
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/blog/tags/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/chaoleili" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="mailto:chaoleili2@gmail.com" target="_blank" title="E-Mail">
+                    
+                      <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#早期OpenStack项目API的实现方式"><span class="nav-number">1.</span> <span class="nav-text">早期OpenStack项目API的实现方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#新项目选用的API框架"><span class="nav-number">2.</span> <span class="nav-text">新项目选用的API框架</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Pecan的应用（以zun项目为例）"><span class="nav-number">2.1.</span> <span class="nav-text">Pecan的应用（以zun项目为例）</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">新参者</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/blog/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/blog/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/blog/js/src/affix.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/blog/js/src/schemes/pisces.js?v=5.1.3"></script>
+
+
+
+  
+  <script type="text/javascript" src="/blog/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/blog/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/blog/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
