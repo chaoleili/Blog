@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Python,tips," />
+  <meta name="keywords" content="Python," />
 
 
 
@@ -79,18 +79,18 @@
 
 
 
-<meta name="description" content="核心思想：利用闭包函数的closure属性 python代码中，某些应用场景需要获取被修饰函数的信息（如传入参数等），而修饰器的个数又是不可控制的。因此需要通过某些方法获被修饰的方法。在详述如何获取被修饰的function之前，首先要解释一下python里面的闭包，以及闭包的一些特性。 何为闭包引用维基百科)的定义：  在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则">
-<meta name="keywords" content="Python,tips">
+<meta name="description" content="核心思想：利用闭包函数的closure属性 python代码中，某些应用场景需要获取被修饰函数的信息（如传入参数等），而修饰器的个数又是不可控制的。因此需要通过某些方法获被修饰的方法。在详述如何获取被修饰的function之前，首先要解释一下python里面的闭包，以及闭包的一些特性。 何为闭包引用维基百科的定义：  在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则可">
+<meta name="keywords" content="Python">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Python获取被多个修饰器修饰的底层函数">
 <meta property="og:url" content="https://chaoleili.github.io/blog/2017/12/15/Python获取被多个修饰器修饰的底层函数/index.html">
 <meta property="og:site_name" content="Blog">
-<meta property="og:description" content="核心思想：利用闭包函数的closure属性 python代码中，某些应用场景需要获取被修饰函数的信息（如传入参数等），而修饰器的个数又是不可控制的。因此需要通过某些方法获被修饰的方法。在详述如何获取被修饰的function之前，首先要解释一下python里面的闭包，以及闭包的一些特性。 何为闭包引用维基百科)的定义：  在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则">
+<meta property="og:description" content="核心思想：利用闭包函数的closure属性 python代码中，某些应用场景需要获取被修饰函数的信息（如传入参数等），而修饰器的个数又是不可控制的。因此需要通过某些方法获被修饰的方法。在详述如何获取被修饰的function之前，首先要解释一下python里面的闭包，以及闭包的一些特性。 何为闭包引用维基百科的定义：  在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则可">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2017-12-15T10:34:50.229Z">
+<meta property="og:updated_time" content="2017-12-15T10:42:45.719Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Python获取被多个修饰器修饰的底层函数">
-<meta name="twitter:description" content="核心思想：利用闭包函数的closure属性 python代码中，某些应用场景需要获取被修饰函数的信息（如传入参数等），而修饰器的个数又是不可控制的。因此需要通过某些方法获被修饰的方法。在详述如何获取被修饰的function之前，首先要解释一下python里面的闭包，以及闭包的一些特性。 何为闭包引用维基百科)的定义：  在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则">
+<meta name="twitter:description" content="核心思想：利用闭包函数的closure属性 python代码中，某些应用场景需要获取被修饰函数的信息（如传入参数等），而修饰器的个数又是不可控制的。因此需要通过某些方法获被修饰的方法。在详述如何获取被修饰的function之前，首先要解释一下python里面的闭包，以及闭包的一些特性。 何为闭包引用维基百科的定义：  在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则可">
 
 
 
@@ -298,7 +298,7 @@
               
                 <span class="post-meta-item-text">更新于&#58;</span>
               
-              <time title="更新于" itemprop="dateModified" datetime="2017-12-15T18:34:50+08:00">
+              <time title="更新于" itemprop="dateModified" datetime="2017-12-15T18:42:45+08:00">
                 2017-12-15
               </time>
             
@@ -356,14 +356,14 @@
       
         <p><strong>核心思想：利用闭包函数的<strong>closure</strong>属性</strong></p>
 <p>python代码中，某些应用场景需要获取被修饰函数的信息（如传入参数等），而修饰器的个数又是不可控制的。因此需要通过某些方法获被修饰的方法。<br>在详述如何获取被修饰的function之前，首先要解释一下python里面的闭包，以及闭包的一些特性。</p>
-<h2 id="何为闭包"><a href="#何为闭包" class="headerlink" title="何为闭包"></a>何为闭包</h2><p>引用<a href="https://zh.wikipedia.org/wiki/%E9%97%AD%E5%8C%85_(%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6" target="_blank" rel="external">维基百科</a>)的定义：</p>
+<h2 id="何为闭包"><a href="#何为闭包" class="headerlink" title="何为闭包"></a>何为闭包</h2><p>引用<a href="https://zh.wikipedia.org/wiki/%E9%97%AD%E5%8C%85_%28%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6%29" target="_blank" rel="external">维基百科</a>的定义：</p>
 <blockquote>
 <p>在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则可能产生闭包。运行时，一旦外部的 函数被执行，一个闭包就形成了，闭包中包含了内部函数的代码，以及所需外部函数中的变量的引用。</p>
 </blockquote>
-<p>通俗点来说就是，函数中定义了一个内部函数，而内部函数使用了外部的变量，这边形成了闭包。</p>
+<p>通俗点来说就是，函数中定义了一个内部函数，而内部函数使用了外部的变量，这便形成了闭包。</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">closure_test</span><span class="params">(out_value)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">inner_func</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">return</span> out_value</span><br><span class="line">    <span class="keyword">return</span> inner_func</span><br></pre></td></tr></table></figure>
-<p>详细参考：<a href="https://segmentfault.com/a/1190000007321972" target="_blank" rel="external">https://segmentfault.com/a/1190000007321972</a></p>
-<h3 id="闭包函数的closure和cell"><a href="#闭包函数的closure和cell" class="headerlink" title="闭包函数的closure和cell"></a>闭包函数的<strong>closure</strong>和cell</h3><p>python中一切皆对象，所以函数也是一种对象,拥有相应的属性。而其中与闭包相关的便是<strong>closure</strong>属性，闭包函数的<strong>closure</strong>属性是一个包含cell对象的元组。每个cell对象则是存了闭包函数中使用的外部变量。可以通过cell对象的cell_contents取出具体值。</p>
+<p>闭包的资料可参考：<a href="https://segmentfault.com/a/1190000007321972" target="_blank" rel="external">https://segmentfault.com/a/1190000007321972</a></p>
+<h3 id="闭包函数的closure和cell"><a href="#闭包函数的closure和cell" class="headerlink" title="闭包函数的closure和cell"></a>闭包函数的<strong>closure</strong>和cell</h3><p>因为在Python中一切皆对象，所以函数也是一种对象,拥有相应的属性。而其中与闭包相关的便是<strong>closure</strong>属性，闭包函数的<strong>closure</strong>属性是一个包含cell对象的元组。每个cell对象则是存了闭包函数中使用的外部变量。可以通过cell对象的cell_contents取出具体值。</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">func</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">f</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">print</span> test</span><br><span class="line">    test = <span class="string">"abc"</span></span><br><span class="line">    <span class="keyword">return</span> f</span><br><span class="line">    </span><br><span class="line">t = func()</span><br><span class="line">t.__closure__</span><br><span class="line">(&lt;cell at <span class="number">0x10a54d6e0</span>: str object at <span class="number">0x10a476918</span>&gt;,)</span><br><span class="line">t.__closure__[<span class="number">0</span>].cell_contents</span><br><span class="line"><span class="string">'abc'</span></span><br></pre></td></tr></table></figure>
 <h2 id="获取被修饰器修饰的函数"><a href="#获取被修饰器修饰的函数" class="headerlink" title="获取被修饰器修饰的函数"></a>获取被修饰器修饰的函数</h2><p><strong>python中的修饰器实际上就是一种闭包</strong>，根据上述的闭包函数特性，可以利用<strong>closure</strong>和cell对象来过滤出非闭包函数，也就是被修饰器修饰的方法。其中，为了避免返回的是非function对象，使用<strong>call</strong>属性进行过滤。代码如下：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_wrapped_function</span><span class="params">(function)</span>:</span></span><br><span class="line">    <span class="string">"""Get the method at the bottom of a stack of decorators."""</span></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> hasattr(function, <span class="string">'__closure__'</span>) <span class="keyword">or</span> <span class="keyword">not</span> function.__closure__:</span><br><span class="line">        <span class="keyword">return</span> function</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_get_wrapped_function</span><span class="params">(function)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> hasattr(function, <span class="string">'__closure__'</span>) <span class="keyword">or</span> <span class="keyword">not</span> function.__closure__:</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">None</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> closure <span class="keyword">in</span> function.__closure__:</span><br><span class="line">            func = closure.cell_contents</span><br><span class="line">            deeper_func = _get_wrapped_function(func)</span><br><span class="line">            <span class="keyword">if</span> deeper_func:</span><br><span class="line">                <span class="keyword">return</span> deeper_func</span><br><span class="line">            <span class="keyword">elif</span> hasattr(closure.cell_contents, <span class="string">'__call__'</span>):</span><br><span class="line">                <span class="keyword">return</span> closure.cell_contents</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> function</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> _get_wrapped_function(function)</span><br></pre></td></tr></table></figure>
@@ -385,8 +385,6 @@
         <div class="post-tags">
           
             <a href="/blog/tags/Python/" rel="tag"># Python</a>
-          
-            <a href="/blog/tags/tips/" rel="tag"># tips</a>
           
         </div>
       
@@ -510,7 +508,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/blog/tags/index.html">
-                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
